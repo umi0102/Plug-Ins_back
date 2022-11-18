@@ -18,6 +18,7 @@ func init() {
 		log.Println(err)
 		panic(err)
 	}
+
 	s, _ := MysqlDb.DB()
 
 	// 设置连接池，空闲连接
