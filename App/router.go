@@ -5,6 +5,7 @@ import (
 	"Plug-Ins/routerMethods/projects"
 	"Plug-Ins/routerMethods/users"
 	"github.com/gin-gonic/gin"
+	"reflect"
 )
 
 func RouterService() {
@@ -12,6 +13,12 @@ func RouterService() {
 	router.Use(func(context *gin.Context) {
 		defer func() {
 			if a := recover(); a != nil {
+				var j map[string]interface{}
+				if reflect.TypeOf(a) == reflect.TypeOf(j) {
+					if _, ok := a.(map[string]interface{})["code"]; !ok {
+						a.(map[string]interface{})["code"] = "-1"
+					}
+				}
 				context.JSON(500, a)
 			}
 		}()
