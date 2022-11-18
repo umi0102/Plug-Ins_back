@@ -13,6 +13,7 @@ func SelectMysql(sqlStr string) map[string]interface{} {
 		panic(scan.Error.Error())
 	}
 	return data
+
 }
 
 // InsUpdDelMysql  插入，修改，删除
