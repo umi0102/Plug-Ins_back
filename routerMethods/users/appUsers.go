@@ -78,19 +78,29 @@ func Regist(ctx *gin.Context) {
 
 	}
 
-	regQuery(userinfo.Phone, userinfo.Password)
-
-	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功"})
-}
-
-func regQuery(phone string, pwd string) {
-
-	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone=%d`, phone))
+	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone="%s"`, userinfo.Phone))
 	if len(mysqlSelect) == 1 {
 		panic("用户名已存在！")
 	}
-	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password) values("%s", %d, "%s")`, RandCreator(64), phone, pwd))
 
+	get := redisServer.RedisDb.Get()
+	defer func(get redis.Conn) {
+		err := get.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(get)
+
+	// redis 拿出手机号 验证码
+	getRedis := redisServer.GetRedis(userinfo.Phone, get)
+	if getRedis != userinfo.Code {
+		panic("验证码错误")
+	}
+
+	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password) values("%s", "%s", "%s")`, RandCreator(64), userinfo.Phone, userinfo.Password))
+	token := GetToken(userinfo.Phone)
+
+	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功", "token": token})
 }
 
 func RandCreator(l int) string {
