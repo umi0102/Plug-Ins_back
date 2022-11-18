@@ -23,6 +23,7 @@ type customClaims struct {
 	jwt.RegisteredClaims
 }
 
+// GetToken 生成JwtToken
 func GetToken(num string) string {
 	claims := customClaims{
 		Username: num,
@@ -47,23 +48,18 @@ func LoginJwt(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
-	login(req.Phone, req.Password)
-	token := GetToken(req.Phone)
-
-	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
-}
-
-func login(phone string, pwd string) {
-
-	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone=%d`, phone)
+	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone="%s"`, req.Phone)
 	mysqlSelect := mysql.SelectMysql(sqlStr)
-	if mysqlSelect["userinfo_password"] != pwd {
+	if mysqlSelect["userinfo_password"] != req.Password {
 
 		panic(map[string]interface{}{
 			"code": "400",
 			"msg":  "密码错误",
 		})
 	}
+	token := GetToken(req.Phone)
+
+	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
 }
 
 // Regist 注册
@@ -197,6 +193,7 @@ func QueryByPhone(ctx *gin.Context) {
 
 }
 
+// LoginByCode 验证码登入
 func LoginByCode(ctx *gin.Context) {
 	var phoneNum = LoginByCodeRequest{}
 	err := ctx.BindJSON(&phoneNum)
