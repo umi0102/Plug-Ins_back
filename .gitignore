@@ -1,2 +1,2 @@
-databases/mysql/connector.go
-databases/redisServer/connector.go
+/databases/mysql/connector.go
+/databases/redisServer/connector.go
