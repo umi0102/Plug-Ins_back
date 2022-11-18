@@ -204,11 +204,11 @@ func LoginByCode(ctx *gin.Context) {
 	}(get)
 
 	// redis 拿出手机号 验证码
-	getRedis := redisServer.GetRedis(strconv.Itoa(phoneNum.Phone), get)
-	if getRedis != strconv.Itoa(phoneNum.Code) {
+	getRedis := redisServer.GetRedis(phoneNum.Phone, get)
+	if getRedis != phoneNum.Code {
 		panic("验证码错误")
 	}
 
-	token := GetToken(strconv.Itoa(phoneNum.Phone))
+	token := GetToken(phoneNum.Phone)
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
 }

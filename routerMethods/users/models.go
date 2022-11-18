@@ -6,6 +6,6 @@ type LoginRequest struct {
 }
 
 type LoginByCodeRequest struct {
-	Phone int `json:"phone"`
-	Code  int `json:"code"`
+	Phone string `json:"phone"`
+	Code  string `json:"code"`
 }
