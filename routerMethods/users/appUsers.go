@@ -194,6 +194,11 @@ func LoginByCode(ctx *gin.Context) {
 		panic("Json解析错误")
 	}
 
+	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone="%s"`, phoneNum.Phone))
+	if len(mysqlSelect) == 0 {
+		panic("用户名不存在！")
+	}
+
 	get := redisServer.RedisDb.Get()
 	defer func(get redis.Conn) {
 		err := get.Close()
