@@ -1,18 +1,26 @@
 package mysql
 
 import (
-	"database/sql"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"log"
 )
 
-var db *sql.DB
+var MysqlDb *gorm.DB
 
-func OpenSql() {
-	db, _ = sql.Open("mysql", "root:123456@tcp(127.0.0.1:3306)/my_db_01")
-	pingErr := db.Ping()
-	if pingErr != nil {
-		panic("pingErr")
+func init() {
+	dbStr := "root:fly0203y*@tcp(81.68.254.93:3306)/my_db_01?charset=utf8mb4&parseTime=True&loc=Local"
+	var err error
+	MysqlDb, err = gorm.Open(mysql.Open(dbStr), &gorm.Config{})
+	if err != nil {
+		log.Println(err)
+		panic(err)
 	}
-	fmt.Println("sql：ok")
+	s, _ := MysqlDb.DB()
+
+	// 设置连接池，空闲连接
+	s.SetMaxIdleConns(50)
+	// 打开链接
+	s.SetMaxOpenConns(100)
 }

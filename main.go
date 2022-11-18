@@ -1,14 +1,13 @@
 package main
 
 import (
-	"Plug-Ins/databases/mysql"
-	"Plug-Ins/databases/redis"
-	"Plug-Ins/routers"
+	"Plug-Ins/App"
+	_ "Plug-Ins/databases/mysql"
+	_ "Plug-Ins/databases/redis"
 )
 
 func main() {
-	redis.Setup()
-	mysql.OpenSql()
+	App.Create()
+	App.RouterService()
 
-	routers.RouterService()
 }
