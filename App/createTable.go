@@ -10,11 +10,11 @@ type bug struct {
 	BugProjectPartName     string `gorm:"not null;type:varchar(30);comment:项目bug模块名称"`
 	BugName                string `gorm:"not null;type:varchar(30);comment:bug名称"`
 	BugFinder              string `gorm:"not null;type:varchar(30);comment:bug发现者"`
-	BugFindTime            int    `gorm:"type:int;comment:bug发现时间"`
+	BugFindTime            int64  `gorm:"type:int;comment:bug发现时间"`
 	BugAssign              string `gorm:"type:varchar(255);comment:bug指派"`
 	BugLevel               string `gorm:"not null;type:varchar(255);comment:bug等级：紧急/常规/历史遗留"`
-	BugComplete            int    `gorm:"not null;type:int;comment:是否完成"`
-	BugCompleteTime        int    `gorm:"type:int;comment:完成时间"`
+	BugComplete            int64  `gorm:"not null;type:int;comment:是否完成"`
+	BugCompleteTime        int64  `gorm:"type:int;comment:完成时间"`
 	BugProjectPartFinisher string `gorm:"type:varchar(50);comment:模块贡献者"`
 }
 
@@ -29,7 +29,7 @@ type project struct {
 	ProjectsId       string `gorm:"primarykey;not null;type:varchar(255);comment:ProjectsId"`
 	ProjectsName     string `gorm:"not null;type:varchar(255);comment:Userid"`
 	ProjectsCreator  string `gorm:"not null;type:varchar(255);comment:Userid"`
-	ProjectsFinished int32  `gorm:"type:int;comment:Userid"`
+	ProjectsFinished int64  `gorm:"type:int;comment:Userid"`
 }
 
 type userinfo struct {
@@ -44,9 +44,9 @@ type needs struct {
 	NeedsProjectName     string `gorm:"type:varchar(50);comment:项目名称"`
 	NeedsPartName        string `gorm:"type:varchar(50);comment:模块名称"`
 	NeedsNeedsAssign     string `gorm:"type:varchar(50);comment:需求指派"`
-	NeedsPartPublishTime int32  `gorm:"type:int;comment:需求发布时间"`
+	NeedsPartPublishTime int64  `gorm:"type:int;comment:需求发布时间"`
 	NeedsContent         string `gorm:"type:varchar(255);comment:需求内容"`
-	NeedsComplete        int32  `gorm:"type:int;comment:是否完成"`
+	NeedsComplete        int64  `gorm:"type:int;comment:是否完成"`
 }
 
 func Create() {

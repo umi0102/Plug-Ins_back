@@ -1,4 +1,4 @@
-package redis
+package redisServer
 
 import (
 	"github.com/gomodule/redigo/redis"

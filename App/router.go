@@ -14,10 +14,10 @@ func RouterService() {
 		defer func() {
 			if a := recover(); a != nil {
 				var j map[string]interface{}
-				if reflect.TypeOf(a) == reflect.TypeOf(j) {
-					if _, ok := a.(map[string]interface{})["code"]; !ok {
-						a.(map[string]interface{})["code"] = "-1"
-					}
+				if reflect.TypeOf(a) != reflect.TypeOf(j) {
+					j["code"] = "-1"
+					j["msg"] = a
+					context.JSON(500, j)
 				}
 				context.JSON(500, a)
 			}
@@ -40,10 +40,10 @@ func RouterService() {
 	//非权限路由
 	group := router.Group("/user")
 	{
-		group.POST("/regist", users.Regist)         //注册
-		group.POST("/login", users.LoginJwt)        //登录
-		group.POST("/sendcode", users.QueryByPhone) //登录
-
+		group.POST("/regist", users.Regist)           //注册
+		group.POST("/login", users.LoginJwt)          //登录
+		group.POST("/sendcode", users.QueryByPhone)   //登录
+		group.POST("/loginbycode", users.LoginByCode) //登录
 	}
 
 	router.Run(":8080")

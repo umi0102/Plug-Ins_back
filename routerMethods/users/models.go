@@ -1,11 +1,11 @@
 package users
 
-type Userinfo struct {
-	Name     string `json:"username"`
+type LoginRequest struct {
+	Phone    int    `json:"phone"`
 	Password string `json:"password"`
 }
 
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+type LoginByCodeRequest struct {
+	Phone int `json:"phone"`
+	Code  int `json:"code"`
 }

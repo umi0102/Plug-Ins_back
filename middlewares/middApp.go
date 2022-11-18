@@ -42,6 +42,7 @@ func AuthRequired() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": -1, "msg": fmt.Sprintf("access token parse error: %v", err)})
 			return
 		}
+		//验证过期
 		if claims, ok := token.Claims.(*customClaims); ok && token.Valid {
 			if !claims.VerifyExpiresAt(time.Now(), false) {
 				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": -1, "msg": "access token expired"})
@@ -49,6 +50,7 @@ func AuthRequired() gin.HandlerFunc {
 			}
 			ctx.Set("claims", claims)
 		} else {
+			//token解析失败
 			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": -1, "msg": fmt.Sprintf("Claims parse error: %v", err)})
 			return
 		}

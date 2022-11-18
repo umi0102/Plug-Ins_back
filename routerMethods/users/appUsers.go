@@ -2,14 +2,17 @@ package users
 
 import (
 	"Plug-Ins/databases/mysql"
+	"Plug-Ins/databases/redisServer"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/gomodule/redigo/redis"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -21,6 +24,23 @@ type customClaims struct {
 	jwt.RegisteredClaims
 }
 
+func GetToken(num string) string {
+	claims := customClaims{
+		Username: num,
+		IsAdmin:  num == "admin",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1 * time.Hour)},
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		panic(err)
+	}
+	return tokenString
+}
+
 // LoginJwt 登入
 func LoginJwt(ctx *gin.Context) {
 	var req LoginRequest
@@ -28,34 +48,15 @@ func LoginJwt(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
+	login(req.Phone, req.Password)
+	token := GetToken(strconv.Itoa(req.Phone))
 
-	claims := customClaims{
-		Username: req.Username,
-		IsAdmin:  req.Username == "admin",
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1 * time.Hour)},
-		},
-	}
-
-	login(req.Username, req.Password)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenString, err1 := token.SignedString(jwtKey)
-	if err1 != nil {
-		log.Println(err1.Error())
-
-		panic(map[string]interface{}{
-			"code": "400",
-			"msg":  "Token过期",
-		})
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": tokenString})
+	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
 }
 
-func login(username string, pwd string) {
+func login(phone int, pwd string) {
 
-	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone="%s"`, username)
+	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone=%d`, phone)
 	mysqlSelect := mysql.SelectMysql(sqlStr)
 	if mysqlSelect["userinfo_password"] != pwd {
 
@@ -68,7 +69,7 @@ func login(username string, pwd string) {
 
 // Regist 注册
 func Regist(ctx *gin.Context) {
-	userinfo := Userinfo{}
+	userinfo := LoginRequest{}
 
 	if err := ctx.ShouldBind(&userinfo); err != nil {
 		panic(map[string]interface{}{
@@ -78,27 +79,21 @@ func Regist(ctx *gin.Context) {
 
 	}
 
-	if len(userinfo.Name) == 0 {
-		panic(map[string]interface{}{
-			"code": "400",
-			"msg":  "格式错误",
-		})
-
-	}
-	regQuery(userinfo.Name, userinfo.Password)
+	regQuery(userinfo.Phone, userinfo.Password)
 
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功"})
 }
 
-func regQuery(name string, pwd string) {
+func regQuery(phone int, pwd string) {
 
-	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone="%s"`, name))
+	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone=%d`, phone))
 	if len(mysqlSelect) == 1 {
 		panic("用户名已存在！")
 	}
-	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password) values("%s", "%s", "%s")`, RandCreator(64), name, pwd))
+	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password) values("%s", %d, "%s")`, RandCreator(64), phone, pwd))
 
 }
+
 func RandCreator(l int) string {
 	str := "0123456789abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+"
 	strList := []byte(str)
@@ -115,31 +110,25 @@ func RandCreator(l int) string {
 	return string(result)
 }
 
-// QueryByPhone 验证码接口，查询用户是否存在
-
-var logger = log.Default()
-
-type QueryByPhoneCallBack struct {
-	Code        int
-	SendCodeMsg string
-}
-
-// Createcode 生成随机四位数字
-func Createcode() string {
-	return fmt.Sprintf("%04v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(10000)) //这里面前面的04v是和后面的1000相对应的
-}
-
-type phones struct {
-	Phone int `json:"phone"`
-}
-
+// QueryByPhone 发送验证码接口，查询用户是否存在
 func QueryByPhone(ctx *gin.Context) {
-	var phoneNum = phones{}
+	var phoneNum = LoginRequest{}
 	err := ctx.BindJSON(&phoneNum)
 	if err != nil {
 		panic("Json错误")
 	}
 
+	// 从redis 连接池中拿出连接
+	get := redisServer.RedisDb.Get()
+	defer get.Close()
+
+	// 验证手机号是否发送过验证码
+	redis := redisServer.ExistsRedis(strconv.Itoa(phoneNum.Phone), get)
+	if !redis {
+		panic("验证码已发送请等待")
+	}
+
+	// 验证手机号是否存在
 	selectMysql := mysql.SelectMysql(fmt.Sprintf(`select  userinfo_phone from userinfos where userinfo_phone = %d`, phoneNum.Phone))
 	fmt.Println(len(selectMysql))
 	if len(selectMysql) == 0 {
@@ -147,15 +136,15 @@ func QueryByPhone(ctx *gin.Context) {
 	}
 
 	//生成随机数
-	verifyCode := Createcode()
+	verifyCode := fmt.Sprintf("%04v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(10000))
 	client := &http.Client{}
 	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", "18355320102", "0000", verifyCode)
 	var jsonStr = []byte(requestBody)
-	requst, err := http.NewRequest("POST",
+	requst, err1 := http.NewRequest("POST",
 		"https://miitangs09.market.alicloudapi.com/v1/tools/sms/code/sender",
 		bytes.NewBuffer(jsonStr))
 
-	if err != nil {
+	if err1 != nil {
 		//验证码请求发送失败联系管理员
 		panic(map[string]interface{}{
 			"code": 1,
@@ -167,25 +156,59 @@ func QueryByPhone(ctx *gin.Context) {
 	requst.Header.Add("Authorization", "APPCODE 23043a6b4ea44c56b5ebe9b65800d3fb")
 	//随机字符串
 	requst.Header.Add("X-Ca-Nonce", verifyCode)
-	response, err := client.Do(requst)
-	if err != nil {
+	response, err2 := client.Do(requst)
+
+	if err2 != nil {
 		panic(map[string]interface{}{
 			"code": 1,
 			"msg":  "验证码发送失败，请联系管理员",
 		})
 	}
 	defer response.Body.Close()
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
+	body, err3 := io.ReadAll(response.Body)
+	if err3 != nil {
 		panic(map[string]interface{}{
 			"code": 1,
 			"msg":  "验证码发送失败，请联系管理员",
 		})
 	}
+	var tempMap map[string]interface{}
+	err4 := json.Unmarshal(body, &tempMap)
+	if err4 != nil {
+		panic("Json错误")
+	}
+
+	// 保存手机号对应对验证码
+	redisServer.SetRedis(strconv.Itoa(phoneNum.Phone), verifyCode, 300, get)
 
 	ctx.JSON(200, gin.H{
 		"code": 200,
-		"msg":  string(body),
+		"msg":  tempMap,
 	})
 
+}
+
+func LoginByCode(ctx *gin.Context) {
+	var phoneNum = LoginByCodeRequest{}
+	err := ctx.BindJSON(&phoneNum)
+	if err != nil {
+		panic("Json解析错误")
+	}
+
+	get := redisServer.RedisDb.Get()
+	defer func(get redis.Conn) {
+		err := get.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(get)
+
+	// redis 拿出手机号 验证码
+	getRedis := redisServer.GetRedis(strconv.Itoa(phoneNum.Phone), get)
+	if getRedis != strconv.Itoa(phoneNum.Code) {
+		panic("验证码错误")
+	}
+
+	token := GetToken(strconv.Itoa(phoneNum.Phone))
+	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
 }
