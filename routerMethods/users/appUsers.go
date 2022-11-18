@@ -12,7 +12,6 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -49,12 +48,12 @@ func LoginJwt(ctx *gin.Context) {
 		return
 	}
 	login(req.Phone, req.Password)
-	token := GetToken(strconv.Itoa(req.Phone))
+	token := GetToken(req.Phone)
 
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
 }
 
-func login(phone int, pwd string) {
+func login(phone string, pwd string) {
 
 	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone=%d`, phone)
 	mysqlSelect := mysql.SelectMysql(sqlStr)
@@ -84,7 +83,7 @@ func Regist(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功"})
 }
 
-func regQuery(phone int, pwd string) {
+func regQuery(phone string, pwd string) {
 
 	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone=%d`, phone))
 	if len(mysqlSelect) == 1 {
@@ -123,7 +122,7 @@ func QueryByPhone(ctx *gin.Context) {
 	defer get.Close()
 
 	// 验证手机号是否发送过验证码
-	redisBool := redisServer.ExistsRedis(fmt.Sprintf("waiting-%s", strconv.Itoa(phoneNum.Phone)), get)
+	redisBool := redisServer.ExistsRedis(fmt.Sprintf("waiting-%s", phoneNum.Phone), get)
 
 	if redisBool == true {
 		panic("验证码已发送请等待")
@@ -139,7 +138,7 @@ func QueryByPhone(ctx *gin.Context) {
 	//生成随机数
 	verifyCode := fmt.Sprintf("%04v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(10000))
 	client := &http.Client{}
-	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", strconv.Itoa(phoneNum.Phone), "0000", verifyCode)
+	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", phoneNum.Phone, "0000", verifyCode)
 	var jsonStr = []byte(requestBody)
 	requst, err1 := http.NewRequest("POST",
 		"https://miitangs09.market.alicloudapi.com/v1/tools/sms/code/sender",
@@ -180,8 +179,8 @@ func QueryByPhone(ctx *gin.Context) {
 	}
 
 	// 保存手机号对应对验证码
-	redisServer.SetRedis(strconv.Itoa(phoneNum.Phone), verifyCode, 300, get)
-	redisServer.SetRedis(fmt.Sprintf("waiting-%s", strconv.Itoa(phoneNum.Phone)), verifyCode, 60, get)
+	redisServer.SetRedis(phoneNum.Phone, verifyCode, 300, get)
+	redisServer.SetRedis(fmt.Sprintf("waiting-%s", phoneNum.Phone), verifyCode, 60, get)
 
 	ctx.JSON(200, gin.H{
 		"code": 200,
@@ -196,7 +195,10 @@ func LoginByCode(ctx *gin.Context) {
 	if err != nil {
 		panic("Json解析错误")
 	}
-
+	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone="%s"`, phoneNum.Phone))
+	if len(mysqlSelect) == 0 {
+		panic("用户名不存在！")
+	}
 	get := redisServer.RedisDb.Get()
 	defer func(get redis.Conn) {
 		err := get.Close()
