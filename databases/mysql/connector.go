@@ -13,10 +13,8 @@ func init() {
 
 	dbStr := "root:fly0203y*@tcp(81.68.254.93:3306)/my_db_01?charset=utf8mb4&parseTime=True&loc=Local"
 	var err error
-
 	MysqlDb, err = gorm.Open(mysql.Open(dbStr), &gorm.Config{})
 	if err != nil {
-
 		log.Println(err)
 		panic(err)
 	}
