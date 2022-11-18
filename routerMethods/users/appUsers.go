@@ -2,9 +2,11 @@ package users
 
 import (
 	"Plug-Ins/databases/mysql"
+	"bytes"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -111,4 +113,79 @@ func RandCreator(l int) string {
 		i = i + 1
 	}
 	return string(result)
+}
+
+// QueryByPhone 验证码接口，查询用户是否存在
+
+var logger = log.Default()
+
+type QueryByPhoneCallBack struct {
+	Code        int
+	SendCodeMsg string
+}
+
+// Createcode 生成随机四位数字
+func Createcode() string {
+	return fmt.Sprintf("%04v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(10000)) //这里面前面的04v是和后面的1000相对应的
+}
+
+type phones struct {
+	Phone int `json:"phone"`
+}
+
+func QueryByPhone(ctx *gin.Context) {
+	var phoneNum = phones{}
+	err := ctx.BindJSON(&phoneNum)
+	if err != nil {
+		panic("Json错误")
+	}
+
+	selectMysql := mysql.SelectMysql(fmt.Sprintf(`select  userinfo_phone from userinfos where userinfo_phone = %d`, phoneNum.Phone))
+	fmt.Println(len(selectMysql))
+	if len(selectMysql) == 0 {
+		panic("手机号错误")
+	}
+
+	//生成随机数
+	verifyCode := Createcode()
+	client := &http.Client{}
+	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", "18355320102", "0000", verifyCode)
+	var jsonStr = []byte(requestBody)
+	requst, err := http.NewRequest("POST",
+		"https://miitangs09.market.alicloudapi.com/v1/tools/sms/code/sender",
+		bytes.NewBuffer(jsonStr))
+
+	if err != nil {
+		//验证码请求发送失败联系管理员
+		panic(map[string]interface{}{
+			"code": 1,
+			"msg":  "验证码发送失败，请联系管理员",
+		})
+	}
+
+	requst.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+	requst.Header.Add("Authorization", "APPCODE 23043a6b4ea44c56b5ebe9b65800d3fb")
+	//随机字符串
+	requst.Header.Add("X-Ca-Nonce", verifyCode)
+	response, err := client.Do(requst)
+	if err != nil {
+		panic(map[string]interface{}{
+			"code": 1,
+			"msg":  "验证码发送失败，请联系管理员",
+		})
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		panic(map[string]interface{}{
+			"code": 1,
+			"msg":  "验证码发送失败，请联系管理员",
+		})
+	}
+
+	ctx.JSON(200, gin.H{
+		"code": 200,
+		"msg":  string(body),
+	})
+
 }

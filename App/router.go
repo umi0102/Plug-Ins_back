@@ -38,9 +38,13 @@ func RouterService() {
 	}
 
 	//非权限路由
+	group := router.Group("/user")
+	{
+		group.POST("/regist", users.Regist)         //注册
+		group.POST("/login", users.LoginJwt)        //登录
+		group.POST("/sendcode", users.QueryByPhone) //登录
 
-	router.POST("/user/regist", users.Regist)  //注册
-	router.POST("/user/login", users.LoginJwt) //登录
+	}
 
 	router.Run(":8080")
 }
