@@ -21,6 +21,7 @@ func init() {
 
 	// 设置连接池，空闲连接
 	s.SetMaxIdleConns(50)
+
 	// 打开链接
 	s.SetMaxOpenConns(100)
 }
