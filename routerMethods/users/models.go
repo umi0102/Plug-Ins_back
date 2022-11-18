@@ -1,7 +1,7 @@
 package users
 
 type LoginRequest struct {
-	Phone    int    `json:"phone"`
+	Phone    string `json:"phone"`
 	Password string `json:"password"`
 }
 
