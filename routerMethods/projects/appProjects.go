@@ -90,6 +90,7 @@ func LeaveProject(ctx *gin.Context) {
 	Leave := LeaveDeveloper{}
 	err := ctx.BindJSON(&Leave)
 	if err != nil {
+
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"code": 400,
 			"msg":  "json格式不正确",
