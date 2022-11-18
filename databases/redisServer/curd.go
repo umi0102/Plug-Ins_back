@@ -25,6 +25,7 @@ func GetRedis(key string, get redis.Conn) string {
 func DelRedis(key string, get redis.Conn) {
 
 	_, err := get.Do("DEL", key)
+
 	if err != nil {
 		panic(err)
 	}
