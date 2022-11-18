@@ -13,11 +13,12 @@ func RouterService() {
 	router.Use(func(context *gin.Context) {
 		defer func() {
 			if a := recover(); a != nil {
-				var j map[string]interface{}
+				j := make(map[string]interface{}, 0)
 				if reflect.TypeOf(a) != reflect.TypeOf(j) {
 					j["code"] = "-1"
 					j["msg"] = a
 					context.JSON(500, j)
+					return
 				}
 				context.JSON(500, a)
 			}

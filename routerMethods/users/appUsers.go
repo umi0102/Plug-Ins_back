@@ -123,8 +123,9 @@ func QueryByPhone(ctx *gin.Context) {
 	defer get.Close()
 
 	// 验证手机号是否发送过验证码
-	redis := redisServer.ExistsRedis(strconv.Itoa(phoneNum.Phone), get)
-	if !redis {
+	redisBool := redisServer.ExistsRedis(fmt.Sprintf("waiting-%s", strconv.Itoa(phoneNum.Phone)), get)
+
+	if redisBool == true {
 		panic("验证码已发送请等待")
 	}
 
@@ -138,7 +139,7 @@ func QueryByPhone(ctx *gin.Context) {
 	//生成随机数
 	verifyCode := fmt.Sprintf("%04v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(10000))
 	client := &http.Client{}
-	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", "18355320102", "0000", verifyCode)
+	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", strconv.Itoa(phoneNum.Phone), "0000", verifyCode)
 	var jsonStr = []byte(requestBody)
 	requst, err1 := http.NewRequest("POST",
 		"https://miitangs09.market.alicloudapi.com/v1/tools/sms/code/sender",
@@ -180,10 +181,11 @@ func QueryByPhone(ctx *gin.Context) {
 
 	// 保存手机号对应对验证码
 	redisServer.SetRedis(strconv.Itoa(phoneNum.Phone), verifyCode, 300, get)
+	redisServer.SetRedis(fmt.Sprintf("waiting-%s", strconv.Itoa(phoneNum.Phone)), verifyCode, 60, get)
 
 	ctx.JSON(200, gin.H{
 		"code": 200,
-		"msg":  tempMap,
+		"msg":  tempMap["code"],
 	})
 
 }
