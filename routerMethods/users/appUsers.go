@@ -75,12 +75,22 @@ func Regist(ctx *gin.Context) {
 		panic(err.Error())
 
 	}
-	if len(userinfo.Name) == 0 {
-		panic("名称不能为空")
-	}
+
 	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone="%s"`, userinfo.Phone))
 	if len(mysqlSelect) == 1 {
-		panic("用户名已存在！")
+		panic(map[string]interface{}{
+			"code": -2,
+			"msg":  "手机号已注册",
+		})
+	}
+
+	if len(userinfo.Code) == 0 {
+		ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "手机可用"})
+		return
+	}
+
+	if len(userinfo.Name) == 0 {
+		panic("名称不能为空")
 	}
 
 	get := redisServer.RedisDb.Get()
@@ -143,16 +153,16 @@ func QueryByPhone(ctx *gin.Context) {
 	}
 
 	// 验证手机号是否存在
-	selectMysql := mysql.SelectMysql(fmt.Sprintf(`select  userinfo_phone from userinfos where userinfo_phone = "%s"`, phoneNum.Phone))
-	fmt.Println(len(selectMysql))
-	if len(selectMysql) == 0 {
-		panic("手机号错误")
-	}
+	//selectMysql := mysql.SelectMysql(fmt.Sprintf(`select  userinfo_phone from userinfos where userinfo_phone = "%s"`, phoneNum.Phone))
+	//fmt.Println(len(selectMysql))
+	//if len(selectMysql) == 0 {
+	//	panic("手机号错误")
+	//}
 
 	//生成随机数
 	verifyCode := fmt.Sprintf("%04v", rand.New(rand.NewSource(time.Now().UnixNano())).Int31n(10000))
 	client := &http.Client{}
-	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", "18355320102", "0000", verifyCode)
+	requestBody := fmt.Sprintf("phoneNumber=%s&smsSignId=%s&verifyCode=%s", phoneNum.Phone, "0000", verifyCode)
 	var jsonStr = []byte(requestBody)
 	requst, err1 := http.NewRequest("POST",
 		"https://miitangs09.market.alicloudapi.com/v1/tools/sms/code/sender",
