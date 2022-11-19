@@ -75,7 +75,9 @@ func Regist(ctx *gin.Context) {
 		panic(err.Error())
 
 	}
-
+	if len(userinfo.Name) == 0 {
+		panic("名称不能为空")
+	}
 	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone="%s"`, userinfo.Phone))
 	if len(mysqlSelect) == 1 {
 		panic("用户名已存在！")
@@ -95,7 +97,7 @@ func Regist(ctx *gin.Context) {
 		panic("验证码错误")
 	}
 
-	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password) values("%s", "%s", "%s")`, RandCreator(64), userinfo.Phone, userinfo.Password))
+	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password, userinfo_name) values("%s", "%s", "%s", "%s")`, RandCreator(64), userinfo.Phone, userinfo.Password, userinfo.Name))
 	token := GetToken(userinfo.Phone)
 
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功", "token": token})

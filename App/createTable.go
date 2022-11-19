@@ -34,6 +34,7 @@ type project struct {
 
 type userinfo struct {
 	UserinfoId           string `gorm:"primarykey;not null;type:varchar(255);comment:Userid"`
+	UserinfoName         string `gorm:"not null;type:varchar(50);comment:名称"`
 	UserinfoPhone        string `gorm:"not null;type:varchar(20);comment:手机"`
 	UserinfoPassword     string `gorm:"not null;type:varchar(25);comment:密码"`
 	UserinfoIdentityType string `gorm:"type:varchar(10);comment:"`
