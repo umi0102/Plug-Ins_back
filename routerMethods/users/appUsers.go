@@ -185,8 +185,7 @@ func QueryByPhone(ctx *gin.Context) {
 	redisServer.SetRedis(phoneNum.Phone, verifyCode, 300, get)
 
 	ctx.JSON(200, gin.H{
-		"code": 200,
-		"msg":  tempMap,
+		"code": tempMap["code"],
 	})
 
 }
