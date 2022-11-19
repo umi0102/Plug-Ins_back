@@ -127,7 +127,12 @@ func QueryByPhone(ctx *gin.Context) {
 
 	// 从redis 连接池中拿出连接
 	get := redisServer.RedisDb.Get()
-	defer get.Close()
+	defer func(get redis.Conn) {
+		err := get.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(get)
 
 	// 验证手机号是否发送过验证码
 	redisBool := redisServer.ExistsRedis(phoneNum.Phone, get)
@@ -171,7 +176,12 @@ func QueryByPhone(ctx *gin.Context) {
 			"msg":  "验证码发送失败，请联系管理员",
 		})
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(response.Body)
 	body, err3 := io.ReadAll(response.Body)
 	if err3 != nil {
 		panic(map[string]interface{}{
