@@ -193,7 +193,7 @@ func QueryByPhone(ctx *gin.Context) {
 
 // LoginByCode 验证码登入
 func LoginByCode(ctx *gin.Context) {
-	var phoneNum = LoginByCodeRequest{}
+	var phoneNum = LoginRequest{}
 	err := ctx.BindJSON(&phoneNum)
 	if err != nil {
 		panic(err.Error())
@@ -216,6 +216,10 @@ func LoginByCode(ctx *gin.Context) {
 	getRedis := redisServer.GetRedis(phoneNum.Phone, get)
 	if getRedis != phoneNum.Code {
 		panic("验证码错误")
+	}
+
+	if len(phoneNum.Password) != 0 {
+		mysql.InsUpdDelMysql(fmt.Sprintf(`UPDATE userinfos SET userinfo_password = "%s" WHERE userinfo_phone="%s"`, phoneNum.Password, phoneNum.Phone))
 	}
 
 	token := GetToken(phoneNum.Phone)
