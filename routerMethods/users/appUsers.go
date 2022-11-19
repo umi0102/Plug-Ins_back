@@ -136,7 +136,7 @@ func QueryByPhone(ctx *gin.Context) {
 
 	// 验证手机号是否发送过验证码
 	redisBool := redisServer.ExistsRedis(fmt.Sprintf(`wait-%s`, phoneNum.Phone), get)
-	if redisBool == false {
+	if redisBool == true {
 		panic("验证码已发送请等待")
 	}
 
