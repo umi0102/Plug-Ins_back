@@ -126,13 +126,13 @@ func QueryByPhone(ctx *gin.Context) {
 	defer get.Close()
 
 	// 验证手机号是否发送过验证码
-	redis := redisServer.ExistsRedis(phoneNum.Phone, get)
-	if !redis {
+	redisBool := redisServer.ExistsRedis(phoneNum.Phone, get)
+	if redisBool == false {
 		panic("验证码已发送请等待")
 	}
 
 	// 验证手机号是否存在
-	selectMysql := mysql.SelectMysql(fmt.Sprintf(`select  userinfo_phone from userinfos where userinfo_phone = %d`, phoneNum.Phone))
+	selectMysql := mysql.SelectMysql(fmt.Sprintf(`select  userinfo_phone from userinfos where userinfo_phone = "%s"`, phoneNum.Phone))
 	fmt.Println(len(selectMysql))
 	if len(selectMysql) == 0 {
 		panic("手机号错误")
