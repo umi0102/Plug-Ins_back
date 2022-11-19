@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var jwtKey []byte = []byte("secret")
+var jwtKey = []byte("secret")
 
 type customClaims struct {
 	Username string `json:"username"`
@@ -45,8 +45,9 @@ func GetToken(num string) string {
 func LoginJwt(ctx *gin.Context) {
 	var req LoginRequest
 	err := ctx.BindJSON(&req)
+
 	if err != nil {
-		return
+		panic(err.Error())
 	}
 	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone="%s"`, req.Phone)
 	mysqlSelect := mysql.SelectMysql(sqlStr)
@@ -67,10 +68,7 @@ func Regist(ctx *gin.Context) {
 	userinfo := LoginRequest{}
 
 	if err := ctx.ShouldBind(&userinfo); err != nil {
-		panic(map[string]interface{}{
-			"code": "400",
-			"msg":  "格式错误",
-		})
+		panic(err.Error())
 
 	}
 
@@ -120,7 +118,7 @@ func QueryByPhone(ctx *gin.Context) {
 	var phoneNum = LoginRequest{}
 	err := ctx.BindJSON(&phoneNum)
 	if err != nil {
-		panic("Json错误")
+		panic(err.Error())
 	}
 
 	// 从redis 连接池中拿出连接
@@ -198,7 +196,7 @@ func LoginByCode(ctx *gin.Context) {
 	var phoneNum = LoginByCodeRequest{}
 	err := ctx.BindJSON(&phoneNum)
 	if err != nil {
-		panic("Json解析错误")
+		panic(err.Error())
 	}
 
 	mysqlSelect := mysql.SelectMysql(fmt.Sprintf(`select userinfo_phone from userinfos where userinfo_phone="%s"`, phoneNum.Phone))

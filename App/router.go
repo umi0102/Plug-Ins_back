@@ -10,6 +10,7 @@ import (
 
 func RouterService() {
 	router := gin.Default()
+
 	router.Use(func(context *gin.Context) {
 		defer func() {
 			if a := recover(); a != nil {
