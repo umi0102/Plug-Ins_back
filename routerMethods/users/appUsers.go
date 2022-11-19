@@ -49,6 +49,10 @@ func LoginJwt(ctx *gin.Context) {
 	if err != nil {
 		panic(err.Error())
 	}
+	if len(req.Password) == 0 {
+		panic("格式错误，密码不能为空")
+	}
+
 	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone="%s"`, req.Phone)
 	mysqlSelect := mysql.SelectMysql(sqlStr)
 	if mysqlSelect["userinfo_password"] != req.Password {
