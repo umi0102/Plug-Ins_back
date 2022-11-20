@@ -57,3 +57,33 @@ func AuthRequired() gin.HandlerFunc {
 		ctx.Next()
 	}
 }
+
+//func InterceptRequests() gin.HandlerFunc {
+//	return func(context *gin.Context) {
+//
+//		get := redisServer.RedisDb.Get()
+//		defer func(get redis.Conn) {
+//			err := get.Close()
+//			if err != nil {
+//
+//			}
+//		}(get)
+//
+//		ip := context.ClientIP()
+//		if len(ip) == 0 {
+//			panic("IP错误")
+//			return
+//		}
+//
+//		keyRedis := fmt.Sprintf("%s-%s", context.Request.URL, ip)
+//		existsRedis := redisServer.ExistsRedis(keyRedis, get)
+//		if existsRedis == false {
+//			redisServer.SetRedis(keyRedis, 1, 60, get)
+//		}
+//		redisServer.GetRedis(keyRedis, get)
+//		redisServer.ExpireRedis(keyRedis, 60, get)
+//		redisServer.IncrRedis(keyRedis, get)
+//
+//		fmt.Println()
+//	}
+//}

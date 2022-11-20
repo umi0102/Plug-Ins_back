@@ -27,7 +27,7 @@ func RouterService() {
 		context.Next()
 	})
 	router.Use(middlewares.Cors())
-
+	//router.Use(middlewares.InterceptRequests())
 	//权限路由
 	api := router.Group("/api")
 	{
