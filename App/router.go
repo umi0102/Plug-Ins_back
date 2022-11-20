@@ -44,8 +44,8 @@ func RouterService() {
 	{
 		group.POST("/regist", users.Regist)           //注册
 		group.POST("/login", users.LoginJwt)          //登录
-		group.POST("/sendcode", users.QueryByPhone)   //登录
-		group.POST("/loginbycode", users.LoginByCode) //登录
+		group.POST("/sendcode", users.QueryByPhone)   //发送验证码
+		group.POST("/loginbycode", users.LoginByCode) //验证码登陆
 	}
 
 	router.Run(":8080")
