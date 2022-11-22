@@ -1,4 +1,4 @@
-package App
+package app
 
 import (
 	"Plug-Ins/databases/mysql"

@@ -1,4 +1,4 @@
-package App
+package app
 
 import (
 	"Plug-Ins/middlewares"
@@ -37,6 +37,7 @@ func RouterService() {
 		api.POST("/joinProject", projects.JoinProject)     //加入项目
 		api.POST("/leaveProject", projects.LeaveProject)   //退出项目/删除成员
 		api.GET("/user/projects", projects.GetProjectList) //项目列表
+		api.POST("/checkToken", projects.CheckToken)       //验证token是否可用
 	}
 
 	//非权限路由

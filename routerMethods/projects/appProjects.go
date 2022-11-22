@@ -116,3 +116,11 @@ func GetProjectList(ctx *gin.Context) {
 		"data": res,
 	})
 }
+
+// CheckToken 验证token
+func CheckToken(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": "success",
+	})
+}
