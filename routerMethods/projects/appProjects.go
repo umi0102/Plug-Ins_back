@@ -126,14 +126,3 @@ func CheckToken(ctx *gin.Context) {
 }
 
 //根据token解析用户名
-
-// GetUserinfo 获取个人信息
-func GetUserinfo(ctx *gin.Context) {
-	info := Userinfo{}
-	fmt.Println(info.Name)
-	res := mysql.SelectMysql(fmt.Sprintf(`select userinfo_name,userinfo_usericon,userinfo_phone,userinfo_name from userinfos where userinfo_name = ("%s")`, info.Name))
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"data": res,
-	})
-}

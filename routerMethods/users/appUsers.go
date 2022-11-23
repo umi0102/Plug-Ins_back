@@ -254,3 +254,19 @@ func LoginByCode(ctx *gin.Context) {
 	token := GetToken(phoneNum.Phone)
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
 }
+
+// GetUserinfo 获取个人信息
+func GetUserinfo(ctx *gin.Context) {
+	info := LoginRequest{}
+	err := ctx.BindJSON(&info)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	res := mysql.SelectMysql(fmt.Sprintf(`select userinfo_name,userinfo_usericon,userinfo_phone,userinfo_name from userinfos where userinfo_name = "%s"`, info.Name))
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": res,
+	})
+}
