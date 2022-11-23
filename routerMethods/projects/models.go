@@ -19,3 +19,10 @@ type LeaveDeveloper struct {
 	Projectname string `json:"projectname"`
 	Developer   string `json:"developer"`
 }
+type Userinfo struct {
+	Usericon     string `json:"usericon"`
+	Name         string `json:"name"`
+	Phone        string `json:"phone"`
+	Password     string `json:"password"`
+	IdentityType string `json:"identity_type"`
+}

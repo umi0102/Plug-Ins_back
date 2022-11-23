@@ -81,7 +81,7 @@ func JoinProject(ctx *gin.Context) {
 	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into developer(projectname,developer,identityType) values("%s", "%s","%s")`, Type.Projectname, Type.Developer, Type.IdentityType))
 	ctx.JSON(http.StatusBadRequest, gin.H{
 		"code": 200,
-		"msg":  "加入项目Ok",
+		"msg":  "加入项目成功",
 	})
 }
 
@@ -101,7 +101,7 @@ func LeaveProject(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusBadRequest, gin.H{
 		"code": 200,
-		"msg":  "用户删除Ok",
+		"msg":  "用户删除成功",
 	})
 
 }
@@ -122,5 +122,18 @@ func CheckToken(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": 200,
 		"data": "success",
+	})
+}
+
+//根据token解析用户名
+
+// GetUserinfo 获取个人信息
+func GetUserinfo(ctx *gin.Context) {
+	info := Userinfo{}
+	fmt.Println(info.Name)
+	res := mysql.SelectMysql(fmt.Sprintf(`select userinfo_name,userinfo_usericon,userinfo_phone,userinfo_name from userinfos where userinfo_name = ("%s")`, info.Name))
+	ctx.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": res,
 	})
 }

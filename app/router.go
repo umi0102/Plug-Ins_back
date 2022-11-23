@@ -38,6 +38,7 @@ func RouterService() {
 		api.POST("/leaveProject", projects.LeaveProject)   //退出项目/删除成员
 		api.GET("/user/projects", projects.GetProjectList) //项目列表
 		api.POST("/checkToken", projects.CheckToken)       //验证token是否可用
+		api.POST("/userinfo", projects.GetUserinfo)
 	}
 
 	//非权限路由
