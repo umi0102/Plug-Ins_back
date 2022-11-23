@@ -26,6 +26,7 @@ func RouterService() {
 		}()
 		context.Next()
 	})
+	router.Use(middlewares.GetRequestIP())
 	router.Use(middlewares.Cors())
 	//router.Use(middlewares.InterceptRequests())
 	//权限路由
@@ -39,7 +40,6 @@ func RouterService() {
 		api.GET("/user/projects", projects.GetProjectList) //项目列表
 		api.POST("/checkToken", projects.CheckToken)       //验证token是否可用
 		api.POST("/userinfo", users.GetUserinfo)
-
 	}
 
 	//非权限路由

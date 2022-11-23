@@ -257,6 +257,7 @@ func LoginByCode(ctx *gin.Context) {
 
 // GetUserinfo 获取个人信息
 func GetUserinfo(ctx *gin.Context) {
+
 	info := LoginRequest{}
 	err := ctx.BindJSON(&info)
 	if err != nil {

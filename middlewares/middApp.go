@@ -1,10 +1,13 @@
 package middlewares
 
 import (
+	"Plug-Ins/databases/redisServer"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/gomodule/redigo/redis"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -24,6 +27,40 @@ func Cors() gin.HandlerFunc {
 		}
 		context.Next()
 	}
+}
+
+// GetRequestIP 限制IP一分钟内请求次数
+func GetRequestIP() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		get := redisServer.RedisDb.Get()
+		defer get.Close()
+
+		reqIP := context.ClientIP()
+		if reqIP == "::1" {
+			reqIP = "127.0.0.1"
+		}
+		fmt.Println(reqIP)
+		if redisServer.ExistsRedis(reqIP, get) {
+			redisServer.IncrRedis(reqIP, get)
+		} else {
+			redisServer.SetRedis(reqIP, 1, 600, get)
+		}
+
+		times := redisServer.GetRedis(reqIP, get)
+		fmt.Println(times + "32112312323123123123")
+		res, err := strconv.Atoi(times)
+		fmt.Println(res)
+
+		if err != nil {
+			panic(err)
+		}
+		if res > 10 {
+			panic("拒绝访问")
+		}
+
+		context.Next()
+	}
+
 }
 
 // 用户验证
@@ -59,32 +96,40 @@ func AuthRequired() gin.HandlerFunc {
 	}
 }
 
-//func InterceptRequests() gin.HandlerFunc {
-//	return func(context *gin.Context) {
-//
-//		get := redisServer.RedisDb.Get()
-//		defer func(get redis.Conn) {
-//			err := get.Close()
-//			if err != nil {
-//
-//			}
-//		}(get)
-//
-//		ip := context.ClientIP()
-//		if len(ip) == 0 {
-//			panic("IP错误")
-//			return
-//		}
-//
-//		keyRedis := fmt.Sprintf("%s-%s", context.Request.URL, ip)
-//		existsRedis := redisServer.ExistsRedis(keyRedis, get)
-//		if existsRedis == false {
-//			redisServer.SetRedis(keyRedis, 1, 60, get)
-//		}
-//		redisServer.GetRedis(keyRedis, get)
-//		redisServer.ExpireRedis(keyRedis, 60, get)
-//		redisServer.IncrRedis(keyRedis, get)
-//
-//		fmt.Println()
-//	}
-//}
+func InterceptRequests(num int) gin.HandlerFunc {
+	return func(context *gin.Context) {
+
+		get := redisServer.RedisDb.Get()
+		defer func(get redis.Conn) {
+			err := get.Close()
+			if err != nil {
+
+			}
+		}(get)
+
+		ip := context.ClientIP()
+		if len(ip) == 0 {
+			panic("IP错误")
+		}
+
+		keyRedis := fmt.Sprintf("%s-%s", context.Request.URL, ip)
+		existsRedis := redisServer.ExistsRedis(keyRedis, get)
+		if existsRedis == false {
+			redisServer.SetRedis(keyRedis, 1, 60, get)
+		}
+		getRedis := redisServer.GetRedis(keyRedis, get)
+		redisServer.ExpireRedis(keyRedis, 60, get)
+		redisServer.IncrRedis(keyRedis, get)
+
+		res, err := strconv.Atoi(getRedis)
+		if err != nil {
+			panic(err)
+		}
+
+		if res >= num {
+			panic("拒绝请求")
+		}
+
+		context.Next()
+	}
+}

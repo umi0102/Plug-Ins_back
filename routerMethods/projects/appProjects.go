@@ -124,5 +124,3 @@ func CheckToken(ctx *gin.Context) {
 		"data": "success",
 	})
 }
-
-//根据token解析用户名
