@@ -3,13 +3,14 @@ package middlewares
 import (
 	"Plug-Ins/databases/redisServer"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/gomodule/redigo/redis"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/gomodule/redigo/redis"
 )
 
 // Cors 跨域
@@ -27,40 +28,6 @@ func Cors() gin.HandlerFunc {
 		}
 		context.Next()
 	}
-}
-
-// GetRequestIP 限制IP一分钟内请求次数
-func GetRequestIP() gin.HandlerFunc {
-	return func(context *gin.Context) {
-		get := redisServer.RedisDb.Get()
-		defer get.Close()
-
-		reqIP := context.ClientIP()
-		if reqIP == "::1" {
-			reqIP = "127.0.0.1"
-		}
-		fmt.Println(reqIP)
-		if redisServer.ExistsRedis(reqIP, get) {
-			redisServer.IncrRedis(reqIP, get)
-		} else {
-			redisServer.SetRedis(reqIP, 1, 600, get)
-		}
-
-		times := redisServer.GetRedis(reqIP, get)
-		fmt.Println(times + "32112312323123123123")
-		res, err := strconv.Atoi(times)
-		fmt.Println(res)
-
-		if err != nil {
-			panic(err)
-		}
-		if res > 10 {
-			panic("拒绝访问")
-		}
-
-		context.Next()
-	}
-
 }
 
 // 用户验证
@@ -96,6 +63,7 @@ func AuthRequired() gin.HandlerFunc {
 	}
 }
 
+// IP限制
 func InterceptRequests(num int) gin.HandlerFunc {
 	return func(context *gin.Context) {
 
@@ -103,7 +71,7 @@ func InterceptRequests(num int) gin.HandlerFunc {
 		defer func(get redis.Conn) {
 			err := get.Close()
 			if err != nil {
-
+				panic(err)
 			}
 		}(get)
 
