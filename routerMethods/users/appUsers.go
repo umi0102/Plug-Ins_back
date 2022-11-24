@@ -6,13 +6,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/gomodule/redigo/redis"
 	"io"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/gomodule/redigo/redis"
 )
 
 var jwtKey = []byte("secret")
@@ -113,6 +114,7 @@ func Regist(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功", "token": token})
 }
 
+// 生产随机数
 func RandCreator(l int) string {
 	str := "0123456789abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+"
 	strList := []byte(str)

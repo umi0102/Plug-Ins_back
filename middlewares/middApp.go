@@ -71,6 +71,7 @@ func InterceptRequests(num int) gin.HandlerFunc {
 		defer func(get redis.Conn) {
 			err := get.Close()
 			if err != nil {
+				context.Abort()
 				panic(err)
 			}
 		}(get)
@@ -83,7 +84,7 @@ func InterceptRequests(num int) gin.HandlerFunc {
 
 		keyRedis := fmt.Sprintf("%s-%s", context.Request.URL, ip)
 		existsRedis := redisServer.ExistsRedis(keyRedis, get)
-		if existsRedis == false {
+		if !existsRedis {
 			redisServer.SetRedis(keyRedis, 1, 60, get)
 		}
 		getRedis := redisServer.GetRedis(keyRedis, get)
