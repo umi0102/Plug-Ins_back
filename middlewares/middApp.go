@@ -77,6 +77,7 @@ func InterceptRequests(num int) gin.HandlerFunc {
 
 		ip := context.ClientIP()
 		if len(ip) == 0 {
+			context.Abort()
 			panic("IP错误")
 		}
 
@@ -95,7 +96,9 @@ func InterceptRequests(num int) gin.HandlerFunc {
 		}
 
 		if res >= num {
+			context.Abort()
 			panic("拒绝请求")
+
 		}
 
 		context.Next()
