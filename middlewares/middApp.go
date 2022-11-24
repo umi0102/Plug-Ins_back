@@ -49,21 +49,17 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 		//验证过期
-		if claims, ok := token.Claims.(*customClaims); ok && token.Valid {
-			if !claims.VerifyExpiresAt(time.Now(), false) {
-				ctx.Abort()
-				ctx.JSON(http.StatusUnauthorized, gin.H{})
-				return
-			}
-
-			// 发送token信息
-			ctx.Set("claims", claims)
-		} else {
+		claims, ok := token.Claims.(*customClaims)
+		if !ok && !token.Valid || !claims.VerifyExpiresAt(time.Now(), false) {
 			//token解析失败
 			ctx.Abort()
-			ctx.JSON(http.StatusUnauthorized, gin.H{})
+			ctx.JSON(http.StatusUnauthorized, gin.H{
+				"msg": "登陆失效",
+			})
 			return
 		}
+		// 发送token信息
+		ctx.Set("claims", claims)
 		ctx.Next()
 	}
 }
