@@ -45,16 +45,15 @@ func AuthRequired() gin.HandlerFunc {
 		token, err := jwt.ParseWithClaims(tokenString, &customClaims{}, func(t *jwt.Token) (interface{}, error) { return jwtKey, nil })
 		if err != nil {
 			ctx.Abort()
-			panic(fmt.Sprintf("access token parse error: %v", err))
+			ctx.JSON(http.StatusUnauthorized, gin.H{})
+			return
 		}
 		//验证过期
 		if claims, ok := token.Claims.(*customClaims); ok && token.Valid {
 			if !claims.VerifyExpiresAt(time.Now(), false) {
 				ctx.Abort()
-				panic(map[string]interface{}{
-					"code": -9999,
-					"msg":  "过期",
-				})
+				ctx.JSON(http.StatusUnauthorized, gin.H{})
+				return
 			}
 
 			// 发送token信息
@@ -62,13 +61,14 @@ func AuthRequired() gin.HandlerFunc {
 		} else {
 			//token解析失败
 			ctx.Abort()
-			panic(fmt.Sprintf("token解析失败: %v", err))
+			ctx.JSON(http.StatusUnauthorized, gin.H{})
+			return
 		}
 		ctx.Next()
 	}
 }
 
-// IP限制
+// InterceptRequests IP限制
 func InterceptRequests(num int) gin.HandlerFunc {
 	return func(context *gin.Context) {
 
