@@ -44,20 +44,25 @@ func AuthRequired() gin.HandlerFunc {
 		tokenString := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
 		token, err := jwt.ParseWithClaims(tokenString, &customClaims{}, func(t *jwt.Token) (interface{}, error) { return jwtKey, nil })
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": -1, "msg": fmt.Sprintf("access token parse error: %v", err)})
-			return
+			ctx.Abort()
+			panic(fmt.Sprintf("access token parse error: %v", err))
 		}
 		//验证过期
 		if claims, ok := token.Claims.(*customClaims); ok && token.Valid {
 			if !claims.VerifyExpiresAt(time.Now(), false) {
-				ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": -1, "msg": "access token expired"})
-				return
+				ctx.Abort()
+				panic(map[string]interface{}{
+					"code": -9999,
+					"msg":  "过期",
+				})
 			}
+
+			// 发送token信息
 			ctx.Set("claims", claims)
 		} else {
 			//token解析失败
-			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": -1, "msg": fmt.Sprintf("Claims parse error: %v", err)})
-			return
+			ctx.Abort()
+			panic(fmt.Sprintf("token解析失败: %v", err))
 		}
 		ctx.Next()
 	}
