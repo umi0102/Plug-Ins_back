@@ -31,7 +31,7 @@ func Cors() gin.HandlerFunc {
 }
 
 // 用户验证
-type customClaims struct {
+type CustomClaims struct {
 	Username string `json:"username"`
 	IsAdmin  bool   `json:"IsAdmin"`
 	jwt.RegisteredClaims
@@ -42,14 +42,14 @@ var jwtKey []byte = []byte("secret")
 func AuthRequired() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tokenString := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
-		token, err := jwt.ParseWithClaims(tokenString, &customClaims{}, func(t *jwt.Token) (interface{}, error) { return jwtKey, nil })
+		token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(t *jwt.Token) (interface{}, error) { return jwtKey, nil })
 		if err != nil {
 			ctx.Abort()
 			ctx.JSON(http.StatusUnauthorized, gin.H{})
 			return
 		}
 		//验证过期
-		claims, ok := token.Claims.(*customClaims)
+		claims, ok := token.Claims.(*CustomClaims)
 		if !ok && !token.Valid || !claims.VerifyExpiresAt(time.Now(), false) {
 			//token解析失败
 			ctx.Abort()
@@ -59,7 +59,8 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 		// 发送token信息
-		ctx.Set("claims", claims)
+		username := claims.Username
+		ctx.Set("phone", username)
 		ctx.Next()
 	}
 }

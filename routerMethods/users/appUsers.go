@@ -260,16 +260,10 @@ func LoginByCode(ctx *gin.Context) {
 // GetUserinfo 获取个人信息
 func GetUserinfo(ctx *gin.Context) {
 
-	info := LoginRequest{}
-	err := ctx.BindJSON(&info)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	res := mysql.SelectMysql(fmt.Sprintf(`select userinfo_name,userinfo_usericon,userinfo_phone,userinfo_name from userinfos where userinfo_name = "%s"`, info.Name))
+	get, _ := ctx.Get("phone")
+	res := mysql.SelectMysql(fmt.Sprintf(`select userinfo_name,userinfo_usericon,userinfo_phone,userinfo_name from userinfos where userinfo_phone = "%s"`, get))
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"code": 200,
 		"data": res,
 	})
 }
