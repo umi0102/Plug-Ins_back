@@ -40,7 +40,9 @@ func RouterService() {
 		api.POST("/leaveProject", middlewares.InterceptRequests(100), projects.LeaveProject)   //退出项目/删除成员
 		api.GET("/user/projects", middlewares.InterceptRequests(100), projects.GetProjectList) //项目列表
 		api.POST("/checkToken", middlewares.InterceptRequests(100), projects.CheckToken)       //验证token是否可用
-		api.POST("/userinfo", middlewares.InterceptRequests(100), users.GetUserinfo)
+		api.POST("/userinfo", middlewares.InterceptRequests(100), users.GetUserinfo)           //获取个人信息
+		api.POST("/imgupload", middlewares.InterceptRequests(100), users.UploadImage)          //上传图片
+
 	}
 
 	//非权限路由

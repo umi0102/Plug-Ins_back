@@ -9,6 +9,8 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -266,4 +268,46 @@ func GetUserinfo(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"data": res,
 	})
+}
+
+// UploadImage  上传图片
+func UploadImage(ctx *gin.Context) {
+	fileHeader, err := ctx.FormFile("files")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"code": "400", "message": err.Error()})
+		return
+	}
+	fileExt := filepath.Ext(fileHeader.Filename)
+	if fileExt == ".jpg" || fileExt == ".png" || fileExt == ".gif" || fileExt == ".jpeg" {
+		get, _ := ctx.Get("phone")
+
+		fileDir := "./public/upload/images/usericon/"
+
+		// fileDb := fmt.Sprintf("public/upload/%s/%d/%d/%d", fileType, now.Year(), now.Month(), now.Day())
+		err = os.MkdirAll(fileDir, 0777)
+		if err != nil {
+			ctx.JSON(http.StatusOK, gin.H{"code": "sb2", "message": err.Error()})
+			return
+		}
+
+		fileName := fmt.Sprintf("%s%s", get, fileExt)
+		filePathStr := filepath.Join(fileDir, fileName)
+		err1 := ctx.SaveUploadedFile(fileHeader, filePathStr)
+		if err1 != nil {
+			fmt.Println("sbbbb")
+			return
+		}
+
+		// dst := path.Join("./public/upload/", file.Filename)
+
+		// 上传文件到指定的路径
+		// c.SaveUploadedFile(file, dst)
+		imgDir := fmt.Sprintf("%s%s%s", fileDir, get, fileExt)
+		mysql.InsUpdDelMysql(fmt.Sprintf(`UPDATE userinfos SET userinfo_usericon = "%s" WHERE userinfo_phone="%s"`, imgDir, get))
+		ctx.JSON(200, gin.H{
+			"status":   "200",
+			"filename": fileHeader.Filename,
+		})
+	}
+
 }
