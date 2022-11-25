@@ -9,8 +9,6 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +17,6 @@ import (
 )
 
 var jwtKey = []byte("secret")
-
-type customClaims struct {
-	Username string `json:"username"`
-	IsAdmin  bool   `json:"IsAdmin"`
-	jwt.RegisteredClaims
-}
 
 // GetToken 生成JwtToken
 func GetToken(num string) string {
@@ -110,27 +102,10 @@ func Regist(ctx *gin.Context) {
 		panic("验证码错误")
 	}
 
-	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password, userinfo_name) values("%s", "%s", "%s", "%s")`, RandCreator(64), userinfo.Phone, userinfo.Password, userinfo.Name))
+	mysql.InsUpdDelMysql(fmt.Sprintf(`insert into userinfos(userinfo_id, userinfo_phone, userinfo_password, userinfo_name) values("%s", "%s", "%s", "%s")`, routers.RandCreator(64), userinfo.Phone, userinfo.Password, userinfo.Name))
 	token := GetToken(userinfo.Phone)
 
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功", "token": token})
-}
-
-// 生产随机数
-func RandCreator(l int) string {
-	str := "0123456789abcdefghigklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+"
-	strList := []byte(str)
-
-	var result []byte
-	i := 0
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i < l {
-		newStr := strList[r.Intn(len(strList))]
-		result = append(result, newStr)
-		i = i + 1
-	}
-	return string(result)
 }
 
 // QueryByPhone 发送验证码接口，查询用户是否存在
@@ -264,50 +239,8 @@ func GetUserinfo(ctx *gin.Context) {
 
 	get, _ := ctx.Get("phone")
 	res := mysql.SelectMysql(fmt.Sprintf(`select userinfo_name,userinfo_usericon,userinfo_phone,userinfo_name from userinfos where userinfo_phone = "%s"`, get))
-
+	fmt.Println(res)
 	ctx.JSON(http.StatusOK, gin.H{
 		"data": res,
 	})
-}
-
-// UploadImage  上传图片
-func UploadImage(ctx *gin.Context) {
-	fileHeader, err := ctx.FormFile("files")
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"code": "400", "message": err.Error()})
-		return
-	}
-	fileExt := filepath.Ext(fileHeader.Filename)
-	if fileExt == ".jpg" || fileExt == ".png" || fileExt == ".gif" || fileExt == ".jpeg" {
-		get, _ := ctx.Get("phone")
-
-		fileDir := "./public/upload/images/usericon/"
-
-		// fileDb := fmt.Sprintf("public/upload/%s/%d/%d/%d", fileType, now.Year(), now.Month(), now.Day())
-		err = os.MkdirAll(fileDir, 0777)
-		if err != nil {
-			ctx.JSON(http.StatusOK, gin.H{"code": "sb2", "message": err.Error()})
-			return
-		}
-
-		fileName := fmt.Sprintf("%s%s", get, fileExt)
-		filePathStr := filepath.Join(fileDir, fileName)
-		err1 := ctx.SaveUploadedFile(fileHeader, filePathStr)
-		if err1 != nil {
-			fmt.Println("sbbbb")
-			return
-		}
-
-		// dst := path.Join("./public/upload/", file.Filename)
-
-		// 上传文件到指定的路径
-		// c.SaveUploadedFile(file, dst)
-		imgDir := fmt.Sprintf("%s%s%s", fileDir, get, fileExt)
-		mysql.InsUpdDelMysql(fmt.Sprintf(`UPDATE userinfos SET userinfo_usericon = "%s" WHERE userinfo_phone="%s"`, imgDir, get))
-		ctx.JSON(200, gin.H{
-			"status":   "200",
-			"filename": fileHeader.Filename,
-		})
-	}
-
 }

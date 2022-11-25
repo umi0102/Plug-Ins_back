@@ -2,8 +2,10 @@ package app
 
 import (
 	"Plug-Ins/middlewares"
-	"Plug-Ins/routerMethods/projects"
-	"Plug-Ins/routerMethods/users"
+	"Plug-Ins/routers"
+	"Plug-Ins/routers/projects"
+	"Plug-Ins/routers/users"
+
 	"reflect"
 
 	"github.com/gin-gonic/gin"
@@ -41,8 +43,7 @@ func RouterService() {
 		api.GET("/user/projects", middlewares.InterceptRequests(100), projects.GetProjectList) //项目列表
 		api.POST("/checkToken", middlewares.InterceptRequests(100), projects.CheckToken)       //验证token是否可用
 		api.POST("/userinfo", middlewares.InterceptRequests(100), users.GetUserinfo)           //获取个人信息
-		api.POST("/imgupload", middlewares.InterceptRequests(100), users.UploadImage)          //上传图片
-
+		api.POST("/imgupload", middlewares.InterceptRequests(100), routers.UploadImage)        //上传图片
 	}
 
 	//非权限路由

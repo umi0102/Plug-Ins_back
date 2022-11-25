@@ -23,7 +23,6 @@ func InsUpdDelMysql(sqlStr string) {
 		panic(tx.Error.Error())
 	}
 	//if tx.RowsAffected == 0 {
-	//	//多做几个判断0不能代表没影响吧，相同值update     affect也是o
 	//	panic("插入,修改,删除操作错误")
 	//}
 
