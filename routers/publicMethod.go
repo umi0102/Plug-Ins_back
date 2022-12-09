@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// 获取图片Base64地址
-func getImage(path string) (baseImg string, err error) {
+// GetImage 获取图片的Base64
+func GetImage(path string) (baseImg string, err error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Println("2222222222222222222222")
@@ -31,10 +31,12 @@ func getImage(path string) (baseImg string, err error) {
 // UploadImage  上传图片
 func UploadImage(ctx *gin.Context) {
 	fileHeader, err := ctx.FormFile("files")
+
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"code": "400", "message": err.Error()})
 		return
 	}
+
 	fileExt := filepath.Ext(fileHeader.Filename)
 	if fileExt == ".jpg" || fileExt == ".png" || fileExt == ".gif" || fileExt == ".jpeg" {
 		get, _ := ctx.Get("phone")

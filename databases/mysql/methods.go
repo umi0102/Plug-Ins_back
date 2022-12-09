@@ -4,14 +4,35 @@ import (
 	"log"
 )
 
+// QueryCheck 验证查询
+//func QueryCheck(sqlStr string) bool {
+//
+//}
+
 // SelectMysql 查询
 func SelectMysql(sqlStr string) map[string]interface{} {
 	data := make(map[string]interface{}, 0)
+
 	scan := MysqlDb.Raw(sqlStr).Scan(&data)
+
 	if scan.Error != nil {
 		log.Println(scan.Error.Error())
 		panic(scan.Error.Error())
 	}
+
+	return data
+
+}
+func SelectAllMysql(sqlStr string) []map[string]interface{} {
+	data := make([]map[string]interface{}, 0)
+
+	scan := MysqlDb.Raw(sqlStr).Scan(&data)
+
+	if scan.Error != nil {
+		log.Println(scan.Error.Error())
+		panic(scan.Error.Error())
+	}
+
 	return data
 
 }

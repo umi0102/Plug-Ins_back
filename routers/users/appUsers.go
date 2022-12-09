@@ -3,6 +3,7 @@ package users
 import (
 	"Plug-Ins/databases/mysql"
 	"Plug-Ins/databases/redisServer"
+	"Plug-Ins/routers"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -51,11 +52,8 @@ func LoginJwt(ctx *gin.Context) {
 	sqlStr := fmt.Sprintf(`select userinfo_password from userinfos where userinfo_phone="%s"`, req.Phone)
 	mysqlSelect := mysql.SelectMysql(sqlStr)
 	if mysqlSelect["userinfo_password"] != req.Password {
-
-		panic(map[string]interface{}{
-			"code": "400",
-			"msg":  "密码错误",
-		})
+		ctx.JSON(http.StatusUnauthorized, "")
+		return
 	}
 	token := GetToken(req.Phone)
 
@@ -236,10 +234,16 @@ func LoginByCode(ctx *gin.Context) {
 
 // GetUserinfo 获取个人信息
 func GetUserinfo(ctx *gin.Context) {
-
 	get, _ := ctx.Get("phone")
 	res := mysql.SelectMysql(fmt.Sprintf(`select userinfo_name,userinfo_usericon,userinfo_phone,userinfo_name from userinfos where userinfo_phone = "%s"`, get))
-	fmt.Println(res)
+	iconPath := res["userinfo_usericon"].(string)
+
+	image, err := routers.GetImage(iconPath)
+	if err != nil {
+		fmt.Println("2121")
+		return
+	}
+	res["userinfo_usericon"] = image
 	ctx.JSON(http.StatusOK, gin.H{
 		"data": res,
 	})

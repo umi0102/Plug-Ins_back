@@ -30,7 +30,7 @@ func Cors() gin.HandlerFunc {
 	}
 }
 
-// 用户验证
+// CustomClaims 用户验证
 type CustomClaims struct {
 	Username string `json:"username"`
 	IsAdmin  bool   `json:"IsAdmin"`
@@ -101,7 +101,6 @@ func InterceptRequests(num int) gin.HandlerFunc {
 		if res >= num {
 			context.Abort()
 			panic("拒绝请求")
-
 		}
 
 		context.Next()
