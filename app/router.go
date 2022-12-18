@@ -6,9 +6,16 @@ import (
 	"Plug-Ins/routers/projects"
 	"Plug-Ins/routers/tools"
 	"Plug-Ins/routers/users"
+	"Plug-Ins/ws"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"reflect"
 )
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
 
 func RouterService() {
 	router := gin.Default()
@@ -54,7 +61,14 @@ func RouterService() {
 		group.POST("/sendcode", middlewares.InterceptRequests(10), users.QueryByPhone)   //发送验证码
 		group.POST("/loginbycode", middlewares.InterceptRequests(30), users.LoginByCode) //验证码登陆
 
+		//group.POST("/aa", middlewares.InterceptRequests(30), users.Sss) //验证码登陆
+
 	}
+
+	router.GET("/socket", func(context *gin.Context) {
+		ws.Handler(context.Writer, context.Request)
+
+	})
 
 	router.Run(":8080")
 }

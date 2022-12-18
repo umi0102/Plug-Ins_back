@@ -4,6 +4,7 @@ import (
 	"Plug-Ins/databases/mysql"
 	"Plug-Ins/databases/redisServer"
 	"Plug-Ins/routers"
+	"Plug-Ins/ws"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -25,7 +26,7 @@ func GetToken(num string) string {
 		Username: num,
 		IsAdmin:  num == "admin",
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1 * time.Hour)},
+			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(1111 * time.Hour)},
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -56,6 +57,8 @@ func LoginJwt(ctx *gin.Context) {
 		return
 	}
 	token := GetToken(req.Phone)
+	fmt.Println("31231231231312312")
+	ws.GetserveInfos()
 
 	ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "登录成功", "data": token})
 }

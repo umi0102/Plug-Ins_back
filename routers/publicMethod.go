@@ -3,6 +3,7 @@ package routers
 import (
 	"Plug-Ins/databases/mysql"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"math/rand"
@@ -10,7 +11,30 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"unsafe"
 )
+
+func Byte2Str(bytes []byte) string {
+	return *(*string)(unsafe.Pointer(&bytes))
+}
+
+func Str2Byte(s string) []byte {
+	tmp1 := (*[2]uintptr)(unsafe.Pointer(&s))
+	tmp2 := [3]uintptr{tmp1[0], tmp1[1], tmp1[1]}
+	return *(*[]byte)(unsafe.Pointer(&tmp2))
+}
+
+func Str2Map(jsonData string) (result map[string]interface{}, err error) {
+	err = json.Unmarshal([]byte(jsonData), &result)
+	return result, err
+}
+
+func Map2Str(mapData map[string]interface{}) (result string, err error) {
+	resultByte, errError := json.Marshal(mapData)
+	result = string(resultByte)
+	err = errError
+	return result, err
+}
 
 // GetImage 获取图片的Base64
 func GetImage(path string) (baseImg string, err error) {
